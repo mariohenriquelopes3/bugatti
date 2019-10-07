@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="Content-Type" content="text/html" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
+	<style>
+		* {
+			/*
+			font-size:0px;
+			*/
+		}
+		body, html {
+			padding:0;
+			margin:0;
+			border:0;
+			font-size:0px;
+		}
+		canvas {
+			width:100% !important;
+			height:100% !important;
+		}
+		.divCommand {
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 200px;
+			height: 130px;
+			background-color: #000;
+			padding: 10px;
+		}
+		.divCommand table {
+			width: 100%;
+		}
+		.divCommand * {
+			color: #fff;
+			font-size: 14px;
+			font-family: sans-serif;
+		}
+		.divLoading {
+			background-color: #000;
+		    color: #fff;
+		    font-size: 14px;
+		    font-family: sans-serif;
+		    position: fixed;
+		    left: 50%;
+		    top: 50%;
+		    transform: translate(-50%, -50%);
+		    padding: 20px;
+		    white-space: normal;
+		}
+	</style>
+	<script src="./js/libs/ammo.js"></script>
+</head>
+<body>
+
+	<script type="module">
+		import * as THREE from '../build/three.module.js';
+		import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+		import { WEBGL } from './jsm/WebGL.js';
+		import { Fisica } from './Fisica.js';
+		import { Carro } from './Carro.js';
+
+		var scene;
+		var camera;
+		var renderer;
+		var clock;
+		var controls;
+		var fisica;
+		var carro1;
+		var carro2;
+
+		function init() {
+			if ( WEBGL.isWebGL2Available() === false ) {
+				document.body.appendChild( WEBGL.getWebGL2ErrorMessage() );
+				return;
+			}
+
+
+			scene = new THREE.Scene();
+			var WIDTH = window.innerWidth;
+			var HEIGHT = window.innerHeight;
+
+			camera = new THREE.PerspectiveCamera(60, WIDTH/HEIGHT, 0.02, 2000);
+			
+			camera.position.set(0, 2, 60);
+
+			renderer = new THREE.WebGLRenderer({antialias:true});
+			renderer.shadowMap.enabled = true;
+			renderer.setSize(WIDTH, HEIGHT);
+			renderer.setClearColor(0xbfd1e5);
+			document.body.appendChild(renderer.domElement);
+
+			// controls = new OrbitControls( camera, renderer.domElement );
+			// controls.target.set(0, 0, 0);
+			// controls.update();
+
+			createObjects();
+
+			window.addEventListener('resize', function(){
+				var WIDTH = window.innerWidth;
+				var HEIGHT = window.innerHeight;
+				
+				renderer.setSize(WIDTH, HEIGHT);
+				camera.aspect = WIDTH/HEIGHT;
+				camera.updateProjectionMatrix();
+			});
+
+			clock = new THREE.Clock();
+			animate();
+		}
+		function animate() {
+			requestAnimationFrame(animate);
+			render();
+			renderer.render(scene, camera);
+		}
+		function createObjects() {
+
+			var ambientLight = new THREE.AmbientLight( 0x404040 );
+			scene.add( ambientLight );
+
+			var dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+			dirLight.position.set( 10, 10, 5 );
+			scene.add( dirLight );
+
+			var loader = new GLTFLoader();
+			loader.load('cena.glb', function (gltf) {
+				scene.add(gltf.scene);
+				console.log(gltf);
+
+				gltf.scene.getObjectByName('plano').massa = 0;
+				for (var i = 0; i < gltf.scene.children.length; i++) {
+					if (gltf.scene.children[i].name.indexOf('Cube') > -1) {
+						gltf.scene.children[i].massa = .2;
+						gltf.scene.children[i].margin = 0.001;
+					}
+				}
+				
+				fisica = new Fisica( gltf.scene.children, function (body1, body2) {
+				}, 9.82, function (fisicaObj) {
+					carro1 = new Carro(fisicaObj, scene, camera, 'carro1');
+					// carro2 = new Carro(fisicaObj, scene, undefined, 'carro2');
+					// var tm = carro2.getVehicle().getChassisWorldTransform();
+					// tm.setOrigin(new Ammo.btVector3(10, 2, -8));
+				});
+
+			}, undefined, function (e) {
+				console.error(e);
+			});
+		}
+		function render() {
+			var delta = clock.getDelta();
+			if (carro1) {
+				carro1.render(delta);
+			}
+			if (carro2) {
+				carro2.render(delta);
+			}
+			if (fisica) {
+				fisica.render(delta);
+			}
+		}
+		function get(id) {
+			return document.getElementById(id);
+		}
+
+		init();
+	</script>
+	<div class="divCommand">
+		<table>
+			<tr>
+				<td>W, Up</td>
+				<td>Accelerate</td>
+			</tr>
+			<tr>
+				<td>S, Down</td>
+				<td>Brake</td>
+			</tr>
+			<tr>
+				<td>A, Left</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>D, Right</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>Z</td>
+				<td>Return to origin</td>
+			</tr>
+			<tr>
+				<td>X</td>
+				<td>Change camera</td>
+			</tr>
+		</table>
+	</div>
+	<div class="divLoading"></div>
+</body>
+</html>
