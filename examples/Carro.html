@@ -57,6 +57,7 @@
 
 	<script type="module">
 		import * as THREE from '../build/three.module.js';
+		import { OrbitControls } from './jsm/controls/OrbitControls.js';
 		import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 		import { WEBGL } from './jsm/WebGL.js';
 		import { Fisica } from './Fisica.js';
@@ -125,7 +126,7 @@
 			scene.add( dirLight );
 
 			var loader = new GLTFLoader();
-			loader.load('cena.glb', function (gltf) {
+			loader.load('Carro.glb', function (gltf) {
 				scene.add(gltf.scene);
 				console.log(gltf);
 
@@ -148,6 +149,13 @@
 			}, undefined, function (e) {
 				console.error(e);
 			});
+
+
+			var urls = [ 'px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg' ];
+				var loaderTexture = new THREE.CubeTextureLoader().setPath( 'textures/cube/skyboxsun25deg/' );
+				loaderTexture.load( urls, function ( texture ) {
+					scene.background = texture;
+				} );
 		}
 		function render() {
 			var delta = clock.getDelta();
