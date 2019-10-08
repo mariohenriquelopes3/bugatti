@@ -304,7 +304,7 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 	createVehicle(new THREE.Vector3(0, 4, -20), ZERO_QUATERNION);
 
 	var loader = new FBXLoader();
-		 loader.load('modelo.fbx', function ( object ) {
+		 loader.load('bugatti.fbx', function ( object ) {
 		 	
 		 	corpo = object.getObjectByName('corpo');
 		 	corpo.geometry.translate(0, -.4, .36);
