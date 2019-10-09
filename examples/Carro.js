@@ -6,31 +6,19 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 	var instancia = this;
 	this.fisica = fisica;
 	var nome = nomeP;
-
 	var scene = sceneP;
 	var camera = cameraP;
-
 	var renderCarro;
-
+	var sound;
 	var carregouModelo = false;
+	var gearRatio = [20, 100];
 
 	// variaveis camera
 	var firstPerson = false;
-	var flagSomarEsquerda = false;
-	var flagSomarDireita = false;
-	var valorSomarEsquerda = 0;
-	var valorSomarDireita = 0;
-	var velocGiroCamera = 2;
-	var deslocGiroCamera = 2.5;
-	var deslocPraTrasCamera = 4;
 	var margem_up = {
 		margem_1pessoa_up: 0.28,
 		margem_3pessoa_up: 2
 	};
-
-	var duration=150;
-	var snail1 = undefined;
-	var snail2 = undefined;
 
 	// variaveis carro
 	var vehicle;
@@ -94,6 +82,17 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 		}
 	};
 	var keydown = function(e) {
+		if (sound == undefined) {
+			var listener = new THREE.AudioListener();
+			sound = new THREE.Audio( listener );
+			var audioLoader = new THREE.AudioLoader();
+			audioLoader.load( 'CarEngine.wav', function( buffer ) {
+				sound.setBuffer( buffer );
+				sound.setLoop( true );
+				sound.setVolume(0.5);
+				sound.play();
+			});
+		}
 		if(keysActions[e.code]) {
 			actions[keysActions[e.code]] = true;
 			e.preventDefault();
@@ -217,27 +216,34 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 		renderCarro = function(dt) {
 
 			var speed = vehicle.getCurrentSpeedKmHour();
-
-			velocGiroCamera = Math.abs(speed) * .66;
-
-			if (velocGiroCamera > 4.2) {
-				velocGiroCamera = 4.2;
+			var speedAbs = Math.abs(speed);
+			var speedAbs2 = speedAbs;
+			if (speedAbs2 >= gearRatio[gearRatio.length - 1] ) {
+				speedAbs2 = gearRatio[gearRatio.length - 1] - 1;
 			}
+			var ii;
+			for (ii = 0; ii < gearRatio.length; ii++) {
+				if (gearRatio[ii] > speedAbs2) {
+					break;
+				}
+			}
+			var gearMinValue=0;
+			if (ii != 0) {
+				gearMinValue = gearRatio[ii - 1];
+			}
+			var gearMaxValue = gearRatio[ii];
+			var enginePitch = ( ( speedAbs2 - gearMinValue ) * (ii+.9)  / (gearMaxValue - gearMinValue));
+			enginePitch++;
 
-			// velocGiroCamera = 3.2;
-
-			deslocGiroCamera = 7.5 - ( Math.abs(speed) * 4.8 / 50 );
-			if (deslocGiroCamera < 0) {
-				deslocGiroCamera = 0;
+			if (sound != undefined) {
+				sound.setPlaybackRate(enginePitch);
 			}
 
 			// speedometer.innerHTML = (speed < 0 ? '(R) ' : '') + Math.abs(speed).toFixed(1) + ' km/h';
+			document.querySelector('.divSpeed').innerHTML = (speed < 0 ? '(R) ' : '') + speedAbs.toFixed(1) + ' Km/h';
 
 			breakingForce = 0;
 			engineForce = 0;
-
-			flagSomarEsquerda = actions.left;
-			flagSomarDireita = actions.right;
 
 			if (actions.acceleration) {
 				if (speed < -1)
@@ -338,22 +344,6 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 	 		renderCarro(dt);
 	 	}
 
-	 	/**************/
-		// CAMERA
-		// Calcula deslocamento de camera
-		if (flagSomarEsquerda) { valorSomarEsquerda += (dt * velocGiroCamera); } else { valorSomarEsquerda -= (dt * velocGiroCamera); }
-		if (flagSomarDireita) { valorSomarDireita += (dt * velocGiroCamera); } else { valorSomarDireita -= (dt * velocGiroCamera); }				
-		if (valorSomarEsquerda < 0) { valorSomarEsquerda = 0; } else if (valorSomarEsquerda > deslocGiroCamera) { valorSomarEsquerda = deslocGiroCamera; }
-		if (valorSomarDireita < 0) { valorSomarDireita = 0; } else if (valorSomarDireita > deslocGiroCamera) { valorSomarDireita = deslocGiroCamera; }
-
-		if (valorSomarEsquerda > valorSomarDireita) {
-			valorSomarDireita = 0;
-		} else {
-			valorSomarEsquerda = 0;
-		}
-
-
-
 		chassisMesh.visible = false;
 		wheelMeshes[FRONT_LEFT].visible = false;
 		wheelMeshes[FRONT_RIGHT].visible = false;
@@ -377,20 +367,6 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 			}
 		} else {
 			if (camera) {
-				//camera.position.copy(chassisMesh.position);
-				//camera.quaternion.copy(chassisMesh.quaternion);
-				//camera.rotateY(Math.PI);
-
-				//camera.position.y += margem_up.margem_3pessoa_up;
-				//camera.translateZ(deslocPraTrasCamera);
-				//camera.translateX(-valorSomarEsquerda);
-				//camera.translateX(valorSomarDireita);
-
-				//camera.lookAt(chassisMesh.position);
-				//var d = Math.abs(camera.position.distanceTo( chassisMesh.position ));
-				//if (d > 4.60) {
-				//camera.translateZ(-1 * (d-4.60) );
-				//}
 				
 				var deslocX = (chassisMesh.position.x - camera.position.x) * .2 * dt;
 				var deslocY = (chassisMesh.position.y - camera.position.y) * .2 * dt;

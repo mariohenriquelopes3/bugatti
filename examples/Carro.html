@@ -50,6 +50,17 @@
 		    padding: 20px;
 		    white-space: normal;
 		}
+		.divSpeed {
+			position: fixed;
+		    right: 0;
+		    top: 0;
+		    white-space: nowrap;
+		    padding: 10px 27px;
+		    background-color: #b72424;
+		    color: #fff;
+		    font-size: 14px;
+		    font-family: sans-serif;
+		}
 	</style>
 	<script src="./js/libs/ammo.js"></script>
 </head>
@@ -71,13 +82,16 @@
 		var fisica;
 		var carro1;
 		var carro2;
+		var audioLoader;
+		var gltf;
+		var origensCube = [];
+		var anykeypressed = false;
 
 		function init() {
 			if ( WEBGL.isWebGL2Available() === false ) {
 				document.body.appendChild( WEBGL.getWebGL2ErrorMessage() );
 				return;
 			}
-
 
 			scene = new THREE.Scene();
 			var WIDTH = window.innerWidth;
@@ -118,6 +132,11 @@
 		}
 		function createObjects() {
 
+			if (!anykeypressed) {
+				setTimeout(createObjects, 500);
+				return;
+			}
+				
 			var ambientLight = new THREE.AmbientLight( 0x404040 );
 			scene.add( ambientLight );
 
@@ -126,19 +145,57 @@
 			scene.add( dirLight );
 
 			var loader = new GLTFLoader();
-			loader.load('cena.glb', function (gltf) {
+			loader.load('cena.glb', function (gltf_aux) {
+				gltf = gltf_aux;
 				scene.add(gltf.scene);
-				console.log(gltf);
 
 				gltf.scene.getObjectByName('plano').massa = 0;
 				for (var i = 0; i < gltf.scene.children.length; i++) {
 					if (gltf.scene.children[i].name.indexOf('Cube') > -1) {
 						gltf.scene.children[i].massa = .2;
 						gltf.scene.children[i].margin = 0.001;
+						origensCube.push({
+							obj: gltf.scene.children[i],
+							px: gltf.scene.children[i].position.x,
+							py: gltf.scene.children[i].position.y,
+							pz: gltf.scene.children[i].position.z,
+							qx: gltf.scene.children[i].quaternion.x,
+							qy: gltf.scene.children[i].quaternion.y,
+							qz: gltf.scene.children[i].quaternion.z,
+							qw: gltf.scene.children[i].quaternion.w
+						});
 					}
 				}
 				
 				fisica = new Fisica( gltf.scene.children, function (body1, body2) {
+					var c1 = false;
+					var c2 = false;
+					if (body1.objeto != undefined && body1.objeto.name != undefined) {
+						if (body1.objeto.name.indexOf('Cube') > -1) {
+							if (body1.objeto.som != undefined) {
+								c1 = true;
+							}
+						} else if (body1.objeto.name == 'plano') {
+							return;
+						}
+					}
+					if (body2.objeto != undefined && body2.objeto.name != undefined) {
+						if (body2.objeto.name.indexOf('Cube') > -1) {
+							if (body2.objeto.som != undefined) {
+								c2 = true;
+							}
+						} else if (body2.objeto.name == 'plano') {
+							return;
+						}
+					}
+					if (c1 && !c2) {
+						body1.objeto.som.play();
+						return;
+					}
+					if (c2 && !c1) {
+						body2.objeto.som.play();
+						return;
+					}
 				}, 9.82, function (fisicaObj) {
 					carro1 = new Carro(fisicaObj, scene, camera, 'carro1');
 					// carro2 = new Carro(fisicaObj, scene, undefined, 'carro2');
@@ -152,10 +209,10 @@
 
 
 			var urls = [ 'px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg' ];
-				var loaderTexture = new THREE.CubeTextureLoader().setPath( 'textures/cube/skyboxsun25deg/' );
-				loaderTexture.load( urls, function ( texture ) {
-					scene.background = texture;
-				} );
+			var loaderTexture = new THREE.CubeTextureLoader().setPath( 'textures/cube/skyboxsun25deg/' );
+			loaderTexture.load( urls, function ( texture ) {
+				scene.background = texture;
+			} );
 		}
 		function render() {
 			var delta = clock.getDelta();
@@ -174,6 +231,48 @@
 		}
 
 		init();
+
+		window.addEventListener('keydown', function(e){
+			if (audioLoader == undefined && gltf != undefined) {
+				audioLoader = new THREE.AudioLoader();
+				audioLoader.load( 'box.wav', function(buffer) {
+					for (var i = 0; i < gltf.scene.children.length; i++) {
+						if (gltf.scene.children[i].name.indexOf('Cube') > -1) {
+							var listener = new THREE.AudioListener();
+							var sound = new THREE.Audio( listener );
+							sound.setVolume(0.5);
+							sound.setBuffer( buffer );
+							gltf.scene.children[i].add( listener );
+							gltf.scene.children[i].som = sound;
+						}
+					}
+				});
+			}
+		});
+		window.addEventListener('keyup', function(e){
+			if (!anykeypressed) {
+				anykeypressed = true;
+				var balboaLoader = new THREE.AudioLoader();
+				balboaLoader.load( 'balboa.mp3', function(buffer) {
+					var listener = new THREE.AudioListener();
+					var sound = new THREE.Audio( listener );
+					sound.setBuffer( buffer );
+					sound.setLoop( true );
+					sound.play();
+				});
+			}
+
+			if (e.code == 'KeyZ') {
+				for (var i = 0; i < origensCube.length; i++) {
+					origensCube[i].obj.userData.physicsBody.setLinearVelocity( new Ammo.btVector3( 0, 0, 0 ) );
+					var t = origensCube[i].obj.userData.physicsBody.getWorldTransform();
+					t.setOrigin( new Ammo.btVector3( origensCube[i].px, origensCube[i].py, origensCube[i].pz ) );
+					t.setRotation( new Ammo.btQuaternion( origensCube[i].qx, origensCube[i].qy, origensCube[i].qz, origensCube[i].qw ) );
+				}
+			}
+		});
+		
+
 	</script>
 	<div class="divCommand">
 		<table>
@@ -203,6 +302,7 @@
 			</tr>
 		</table>
 	</div>
-	<div class="divLoading"></div>
+	<div class="divLoading">Press any key</div>
+	<div class="divSpeed"></div>
 </body>
 </html>
