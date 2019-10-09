@@ -147,8 +147,27 @@ function Fisica(objetos, funcaoColisao, gravityConstant, funcaoLoad) {
 			var contactManifold = this.dispatcher.getManifoldByIndexInternal( i );
 			var rb0 = Ammo.castObject( contactManifold.getBody0(), Ammo.btRigidBody );
 			var rb1 = Ammo.castObject( contactManifold.getBody1(), Ammo.btRigidBody );
+
+			var maxImpulse = 0;
+			var impactPoint = new THREE.Vector3();
+			var impactNormal = new THREE.Vector3();
+			for ( var j = 0, jl = contactManifold.getNumContacts(); j < jl; j ++ ) {
+				var contactPoint = contactManifold.getContactPoint( j );
+				if ( contactPoint.getDistance() < 0 ) {
+					var impulse = contactPoint.getAppliedImpulse();
+					if ( impulse > maxImpulse ) {
+						maxImpulse = impulse;
+						var pos = contactPoint.get_m_positionWorldOnB();
+						var normal = contactPoint.get_m_normalWorldOnB();
+						impactPoint.set( pos.x(), pos.y(), pos.z() );
+						impactNormal.set( normal.x(), normal.y(), normal.z() );
+					}
+					break;
+				}
+			}
+
 			if (this.funcaoColisao != undefined) {
-				this.funcaoColisao(rb0, rb1);
+				this.funcaoColisao(rb0, rb1, maxImpulse, impactPoint, impactNormal);
 			}
 		}
 	};
