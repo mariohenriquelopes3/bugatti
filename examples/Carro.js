@@ -2,9 +2,10 @@
 import * as THREE from '../build/three.module.js';
 import { FBXLoader } from './jsm/loaders/FBXLoader.js';
 
-function Carro(fisica, sceneP, cameraP, nomeP) {
+function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed) {
 	var instancia = this;
 	this.fisica = fisica;
+	this.funcaoSpeed = funcaoSpeed;
 	var nome = nomeP;
 	var scene = sceneP;
 	var camera = cameraP;
@@ -68,22 +69,19 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 	var keyup = function(e) {
 		if(keysActions[e.code]) {
 			actions[keysActions[e.code]] = false;
-			e.preventDefault();
-			e.stopPropagation();
-			return false;
 		}
 		if (e.code == 'KeyX') {
 			firstPerson = !firstPerson;
-		} else if (e.code == 'KeyZ') {
-			var tm = vehicle.getChassisWorldTransform();
-			chassisRigidBody.setLinearVelocity( new Ammo.btVector3( 0, 0, 0 ) );
-			tm.setOrigin(new Ammo.btVector3(-0.00010793397814268246, 1.550489604473114, -19.913904190063477));
-			tm.setRotation(new Ammo.btQuaternion(-0.0026274363044649363, -0.002687657019123435, -0.000005663222964358283, 0.9999929070472717));
 		}
 	};
 	var keydown = function(e) {
 		if (sound == undefined) {
 			var listener = new THREE.AudioListener();
+
+			if (camera == undefined) {
+				chassisMesh.add( listener );
+			}
+
 			sound = new THREE.Audio( listener );
 			var audioLoader = new THREE.AudioLoader();
 			audioLoader.load( 'CarEngine.wav', function( buffer ) {
@@ -95,9 +93,6 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 		}
 		if(keysActions[e.code]) {
 			actions[keysActions[e.code]] = true;
-			e.preventDefault();
-			e.stopPropagation();
-			return false;
 		}
 	}
 
@@ -239,8 +234,9 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 				sound.setPlaybackRate(enginePitch);
 			}
 
-			// speedometer.innerHTML = (speed < 0 ? '(R) ' : '') + Math.abs(speed).toFixed(1) + ' km/h';
-			document.querySelector('.divSpeed').innerHTML = (speed < 0 ? '(R) ' : '') + speedAbs.toFixed(1) + ' Km/h';
+			if (instancia.funcaoSpeed != undefined) {
+				instancia.funcaoSpeed(speed);
+			}
 
 			breakingForce = 0;
 			engineForce = 0;
@@ -332,9 +328,12 @@ function Carro(fisica, sceneP, cameraP, nomeP) {
 
 		 	carregouModelo = true;
 	 }, function(xhr) {
-	 	document.querySelector('.divLoading').innerHTML = ( xhr.loaded / xhr.total * 100 ).toFixed(2) + '% Loading bugatti';
-	 	if (xhr.loaded == xhr.total) {
-	 		document.querySelector('.divLoading').style.display = 'none';
+	 	var p = document.querySelector('.divLoading');
+	 	if (p && camera) {
+		 	document.querySelector('.divLoading').innerHTML = ( xhr.loaded / xhr.total * 100 ).toFixed(2) + '% Loading bugatti';
+		 	if (xhr.loaded == xhr.total) {
+		 		document.querySelector('.divLoading').style.display = 'none';
+		 	}
 	 	}
 	 });
 

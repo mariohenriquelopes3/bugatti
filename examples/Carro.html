@@ -71,8 +71,8 @@
 		// import { OrbitControls } from './jsm/controls/OrbitControls.js';
 		import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 		import { WEBGL } from './jsm/WebGL.js';
-		import { Fisica } from './Fisica.js';
-		import { Carro } from './Carro.js';
+		import { Fisica } from './Fisica.js?v=1';
+		import { Carro } from './Carro.js?v=1';
 
 		var scene;
 		var camera;
@@ -197,10 +197,14 @@
 						return;
 					}
 				}, 9.82, function (fisicaObj) {
-					carro1 = new Carro(fisicaObj, scene, camera, 'carro1');
+					carro1 = new Carro(fisicaObj, scene, camera, 'carro1', function (speed) {
+						document.querySelector('.divSpeed').innerHTML = (speed < 0 ? '(R) ' : '') + Math.abs(speed).toFixed(1) + ' Km/h';
+					});
+					
+					// other car
 					// carro2 = new Carro(fisicaObj, scene, undefined, 'carro2');
 					// var tm = carro2.getVehicle().getChassisWorldTransform();
-					// tm.setOrigin(new Ammo.btVector3(10, 2, -8));
+					// tm.setOrigin(new Ammo.btVector3(15, 2, -8));
 				});
 
 			}, undefined, function (e) {
@@ -263,12 +267,20 @@
 			}
 
 			if (e.code == 'KeyZ') {
-				for (var i = 0; i < origensCube.length; i++) {
-					origensCube[i].obj.userData.physicsBody.setLinearVelocity( new Ammo.btVector3( 0, 0, 0 ) );
-					var t = origensCube[i].obj.userData.physicsBody.getWorldTransform();
-					t.setOrigin( new Ammo.btVector3( origensCube[i].px, origensCube[i].py, origensCube[i].pz ) );
-					t.setRotation( new Ammo.btQuaternion( origensCube[i].qx, origensCube[i].qy, origensCube[i].qz, origensCube[i].qw ) );
+				if (carro1 != undefined) {
+					for (var i = 0; i < origensCube.length; i++) {
+						origensCube[i].obj.userData.physicsBody.setLinearVelocity( new Ammo.btVector3(0, 0, 0 ));
+						var t = origensCube[i].obj.userData.physicsBody.getWorldTransform();
+						t.getOrigin().setValue(origensCube[i].px, origensCube[i].py, origensCube[i].pz);
+						t.setRotation( new Ammo.btQuaternion(origensCube[i].qx, origensCube[i].qy, origensCube[i].qz, origensCube[i].qw ));
+					}
+					
+					var tm = carro1.getVehicle().getChassisWorldTransform();
+					carro1.getBody().setLinearVelocity( new Ammo.btVector3(0, 0, 0));
+					tm.getOrigin().setValue(0, 1.55, -19);
+					tm.setRotation(new Ammo.btQuaternion(-0.0026274363044649363, -0.002687657019123435, -0.000005663222964358283, 0.9999929070472717));
 				}
+				
 			}
 		});
 		
