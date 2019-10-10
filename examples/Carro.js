@@ -2,10 +2,11 @@
 import * as THREE from '../build/three.module.js';
 import { FBXLoader } from './jsm/loaders/FBXLoader.js';
 
-function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed) {
+function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	var instancia = this;
 	this.fisica = fisica;
 	this.funcaoSpeed = funcaoSpeed;
+	this.funcaoLoading = funcaoLoading;
 	var nome = nomeP;
 	var scene = sceneP;
 	var camera = cameraP;
@@ -306,10 +307,47 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed) {
 	createVehicle(new THREE.Vector3(0, 4, -20), ZERO_QUATERNION);
 
 	var loader = new FBXLoader();
-		 loader.load('bugatti.fbx', function ( object ) {
+		 loader.load('bugatti2.fbx', function ( object ) {
+		 	console.log( object );
 		 	
 		 	corpo = object.getObjectByName('corpo');
+		 	
 		 	corpo.geometry.translate(0, -.4, .36);
+		 	for (var i = 0; i < corpo.material.length; i++) {
+		 		if (corpo.material[i].name == "BLUE_002") {
+		 			corpo.material[i].color.set(0x4f4fff);
+		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = 0;
+		 			corpo.material[i].shininess = 30;
+		 			corpo.material[i].envMap = scene.background;
+		 			corpo.material[i].reflectivity = 1.0;
+			 		corpo.material[i].refractionRatio = 0;
+			 		corpo.material[i].needsUpdate = true;
+	 			} else if (corpo.material[i].name == 'front_window_004') {
+		 			corpo.material[i].color.set(0x3a3a3a);
+		 			corpo.material[i].shininess = 0;
+		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = .7;
+		 			corpo.material[i].envMap = scene.background;
+			 		corpo.material[i].reflectivity = 1.0;
+			 		corpo.material[i].refractionRatio = 0;
+			 		corpo.material[i].needsUpdate = true;
+		 		} else if (corpo.material[i].name == 'NAVY') {
+		 			corpo.material[i].color.set(0x282828);
+		 			corpo.material[i].shininess = 20;
+		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = .1;
+		 			corpo.material[i].envMap = scene.background;
+			 		corpo.material[i].reflectivity = 1.0;
+			 		corpo.material[i].refractionRatio = 0;
+			 		corpo.material[i].needsUpdate = true;
+		 		} else if (corpo.material[i].name == 'aba') {
+		 			corpo.material[i].color.set(0x3e3efa);
+		 			corpo.material[i].shininess = 30;
+		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = .1;
+		 			corpo.material[i].envMap = scene.background;
+			 		corpo.material[i].reflectivity = 1.0;
+			 		corpo.material[i].refractionRatio = 0;
+			 		corpo.material[i].needsUpdate = true;
+		 		}
+		 	}
 		 	
 		 	trasesq = object.getObjectByName('trasesq');
 		 	trasdir = object.getObjectByName('trasdir');
@@ -328,12 +366,8 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed) {
 
 		 	carregouModelo = true;
 	 }, function(xhr) {
-	 	var p = document.querySelector('.divLoading');
-	 	if (p && camera) {
-		 	document.querySelector('.divLoading').innerHTML = ( xhr.loaded / xhr.total * 100 ).toFixed(2) + '% Loading bugatti';
-		 	if (xhr.loaded == xhr.total) {
-		 		document.querySelector('.divLoading').style.display = 'none';
-		 	}
+	 	if (instancia.funcaoLoading != undefined) {
+	 		instancia.funcaoLoading(xhr);
 	 	}
 	 });
 

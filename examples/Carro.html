@@ -71,8 +71,8 @@
 		// import { OrbitControls } from './jsm/controls/OrbitControls.js';
 		import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 		import { WEBGL } from './jsm/WebGL.js';
-		import { Fisica } from './Fisica.js?v=1';
-		import { Carro } from './Carro.js?v=1';
+		import { Fisica } from './Fisica.js?v=2';
+		import { Carro } from './Carro.js?v=2';
 
 		var scene;
 		var camera;
@@ -111,7 +111,12 @@
 			// controls.target.set(0, 0, 0);
 			// controls.update();
 
-			createObjects();
+			var urls = [ 'px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg' ];
+			var loaderTexture = new THREE.CubeTextureLoader().setPath( 'textures/cube/skyboxsun25deg/' );
+			loaderTexture.load( urls, function ( texture ) {
+				scene.background = texture;
+				createObjects();
+			} );
 
 			window.addEventListener('resize', function(){
 				var WIDTH = window.innerWidth;
@@ -199,6 +204,12 @@
 				}, 9.82, function (fisicaObj) {
 					carro1 = new Carro(fisicaObj, scene, camera, 'carro1', function (speed) {
 						document.querySelector('.divSpeed').innerHTML = (speed < 0 ? '(R) ' : '') + Math.abs(speed).toFixed(1) + ' Km/h';
+					}, function (xhr) {
+						var p = document.querySelector('.divLoading');
+					 	p.innerHTML = ( xhr.loaded / xhr.total * 100 ).toFixed(2) + '% Loading bugatti';
+					 	if (xhr.loaded == xhr.total) {
+					 		p.style.display = 'none';
+					 	}
 					});
 					
 					// other car
@@ -211,12 +222,6 @@
 				console.error(e);
 			});
 
-
-			var urls = [ 'px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg' ];
-			var loaderTexture = new THREE.CubeTextureLoader().setPath( 'textures/cube/skyboxsun25deg/' );
-			loaderTexture.load( urls, function ( texture ) {
-				scene.background = texture;
-			} );
 		}
 		function render() {
 			var delta = clock.getDelta();
