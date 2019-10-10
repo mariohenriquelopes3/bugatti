@@ -1,6 +1,7 @@
 // NECESSARIO IMPORTAR o ammo.js externamente
 import * as THREE from '../build/three.module.js';
 import { FBXLoader } from './jsm/loaders/FBXLoader.js';
+import { MeuGui } from './MeuGui.js';
 
 function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	var instancia = this;
@@ -14,6 +15,29 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	var sound;
 	var carregouModelo = false;
 	var gearRatio = [20, 100];
+
+	var meuGui = new MeuGui(false); // true for debug colors
+	var controller  = {
+		color: 0x4a4ae3,
+		envMapIntensity: 1,
+		roughness: 0,
+		metalness: 1,
+
+		color2: 0x222222,
+		envMapIntensity2: 1,
+		roughness2: 0.125,
+		metalness2: 1,
+
+		color3: 0xbbbbbb,
+		envMapIntensity3: 1,
+		roughness3: 0,
+		metalness3: 1,
+
+		color4: 0x4a4ae3,
+		envMapIntensity4: 1,
+		roughness4: 0,
+		metalness4: 1
+	};
 
 	// variaveis camera
 	var firstPerson = false;
@@ -311,41 +335,130 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 		 	console.log( object );
 		 	
 		 	corpo = object.getObjectByName('corpo');
-		 	
 		 	corpo.geometry.translate(0, -.4, .36);
+
+		 	// Debug Colors
 		 	for (var i = 0; i < corpo.material.length; i++) {
 		 		if (corpo.material[i].name == "BLUE_002") {
-		 			corpo.material[i].color.set(0x4f4fff);
-		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = 0;
-		 			corpo.material[i].shininess = 30;
-		 			corpo.material[i].envMap = scene.background;
-		 			corpo.material[i].reflectivity = 1.0;
-			 		corpo.material[i].refractionRatio = 0;
-			 		corpo.material[i].needsUpdate = true;
+			 		corpo.material[i] = new THREE.MeshStandardMaterial( {
+			 			envMap: scene.background,
+			 			emissiveIntensity: controller.emissiveIntensity,
+			 			envMapIntensity: controller.envMapIntensity,
+			 			roughness: controller.roughness,
+			 			metalness: controller.metalness,
+			 			color: controller.color,
+			 			emissiveIntensity: 0
+			 		} );
+			 		var fnMat = function (m) {
+						meuGui.add(controller, 'envMapIntensity', function (value) {
+							m.envMapIntensity = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'roughness', function (value) {
+							m.roughness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'metalness', function (value) {
+							m.metalness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.addColor(controller, 'color', function (value) {
+							m.color.setHex( value );
+							m.needsUpdate = true;
+						});
+						
+			 		};
+			 		fnMat( corpo.material[i] );
 	 			} else if (corpo.material[i].name == 'front_window_004') {
-		 			corpo.material[i].color.set(0x3a3a3a);
-		 			corpo.material[i].shininess = 0;
-		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = .7;
-		 			corpo.material[i].envMap = scene.background;
-			 		corpo.material[i].reflectivity = 1.0;
-			 		corpo.material[i].refractionRatio = 0;
-			 		corpo.material[i].needsUpdate = true;
+		 			corpo.material[i] = new THREE.MeshStandardMaterial( {
+			 			envMap: scene.background,
+			 			emissiveIntensity: controller.emissiveIntensity3,
+			 			envMapIntensity: controller.envMapIntensity3,
+			 			roughness: controller.roughness3,
+			 			metalness: controller.metalness3,
+			 			color: controller.color3,
+			 			emissiveIntensity: 0
+			 		} );
+			 		var fnMat = function (m) {
+						meuGui.add(controller, 'envMapIntensity3', function (value) {
+							m.envMapIntensity = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'roughness3', function (value) {
+							m.roughness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'metalness3', function (value) {
+							m.metalness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.addColor(controller, 'color3', function (value) {
+							m.color.setHex( value );
+							m.needsUpdate = true;
+						});
+						
+			 		};
+			 		fnMat( corpo.material[i] );
 		 		} else if (corpo.material[i].name == 'NAVY') {
-		 			corpo.material[i].color.set(0x282828);
-		 			corpo.material[i].shininess = 20;
-		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = .1;
-		 			corpo.material[i].envMap = scene.background;
-			 		corpo.material[i].reflectivity = 1.0;
-			 		corpo.material[i].refractionRatio = 0;
-			 		corpo.material[i].needsUpdate = true;
+		 			corpo.material[i] = new THREE.MeshStandardMaterial( {
+			 			envMap: scene.background,
+			 			emissiveIntensity: controller.emissiveIntensity2,
+			 			envMapIntensity: controller.envMapIntensity2,
+			 			roughness: controller.roughness2,
+			 			metalness: controller.metalness2,
+			 			color: controller.color2,
+			 			emissiveIntensity: 0
+			 		} );
+			 		var fnMat = function (m) {
+						meuGui.add(controller, 'envMapIntensity2', function (value) {
+							m.envMapIntensity = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'roughness2', function (value) {
+							m.roughness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'metalness2', function (value) {
+							m.metalness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.addColor(controller, 'color2', function (value) {
+							m.color.setHex( value );
+							m.needsUpdate = true;
+						});
+						
+			 		};
+			 		fnMat( corpo.material[i] );
 		 		} else if (corpo.material[i].name == 'aba') {
-		 			corpo.material[i].color.set(0x3e3efa);
-		 			corpo.material[i].shininess = 30;
-		 			corpo.material[i].specular.r = corpo.material[i].specular.g = corpo.material[i].specular.b = .1;
-		 			corpo.material[i].envMap = scene.background;
-			 		corpo.material[i].reflectivity = 1.0;
-			 		corpo.material[i].refractionRatio = 0;
-			 		corpo.material[i].needsUpdate = true;
+		 			corpo.material[i] = new THREE.MeshStandardMaterial( {
+			 			envMap: scene.background,
+			 			emissiveIntensity: controller.emissiveIntensity4,
+			 			envMapIntensity: controller.envMapIntensity4,
+			 			roughness: controller.roughness4,
+			 			metalness: controller.metalness4,
+			 			color: controller.color4,
+			 			emissiveIntensity: 0
+			 		} );
+			 		var fnMat = function (m) {
+						meuGui.add(controller, 'envMapIntensity4', function (value) {
+							m.envMapIntensity = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'roughness4', function (value) {
+							m.roughness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.add(controller, 'metalness4', function (value) {
+							m.metalness = value;
+							m.needsUpdate = true;
+						}, 0.0, 1.0, 0.025);
+						meuGui.addColor(controller, 'color4', function (value) {
+							m.color.setHex( value );
+							m.needsUpdate = true;
+						});
+						
+			 		};
+			 		fnMat( corpo.material[i] );
 		 		}
 		 	}
 		 	
