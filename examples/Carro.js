@@ -100,13 +100,8 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 		}
 	};
 	var keydown = function(e) {
-		if (sound == undefined) {
+		if (sound == undefined && camera != undefined) {
 			var listener = new THREE.AudioListener();
-
-			if (camera == undefined) {
-				chassisMesh.add( listener );
-			}
-
 			sound = new THREE.Audio( listener );
 			var audioLoader = new THREE.AudioLoader();
 			audioLoader.load( 'CarEngine.wav', function( buffer ) {

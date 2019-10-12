@@ -71,8 +71,8 @@
 		// import { OrbitControls } from './jsm/controls/OrbitControls.js';
 		import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 		import { WEBGL } from './jsm/WebGL.js';
-		import { Fisica } from './Fisica.js?v=3';
-		import { Carro } from './Carro.js?v=3';
+		import { Fisica } from './Fisica.js?v=2';
+		import { Carro } from './Carro.js?v=2';
 
 		var scene;
 		var camera;
@@ -241,17 +241,17 @@
 
 		init();
 
+		var listener = new THREE.AudioListener();
+
 		window.addEventListener('keydown', function(e){
 			if (audioLoader == undefined && gltf != undefined) {
 				audioLoader = new THREE.AudioLoader();
 				audioLoader.load( 'box.wav', function(buffer) {
 					for (var i = 0; i < gltf.scene.children.length; i++) {
 						if (gltf.scene.children[i].name.indexOf('Cube') > -1) {
-							var listener = new THREE.AudioListener();
-							var sound = new THREE.Audio( listener );
+							var sound = new THREE.Audio(listener);
 							sound.setVolume(0.5);
 							sound.setBuffer( buffer );
-							gltf.scene.children[i].add( listener );
 							gltf.scene.children[i].som = sound;
 						}
 					}
@@ -263,7 +263,6 @@
 				anykeypressed = true;
 				var balboaLoader = new THREE.AudioLoader();
 				balboaLoader.load( 'balboa.mp3', function(buffer) {
-					var listener = new THREE.AudioListener();
 					var sound = new THREE.Audio( listener );
 					sound.setBuffer( buffer );
 					sound.setLoop( true );
