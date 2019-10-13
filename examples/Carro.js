@@ -2,6 +2,7 @@
 import * as THREE from '../build/three.module.js';
 import { FBXLoader } from './jsm/loaders/FBXLoader.js';
 import { MeuGui } from './MeuGui.js';
+import { Bandeira } from './Bandeira.js';
 
 function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	var instancia = this;
@@ -15,6 +16,7 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	var sound;
 	var carregouModelo = false;
 	var gearRatio = [20, 100];
+	var bandeira;
 
 	var meuGui = new MeuGui(false); // true for debug colors
 	var controller  = {
@@ -36,7 +38,11 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 		color4: 0x4a4ae3,
 		envMapIntensity4: 1,
 		roughness4: 0,
-		metalness4: 1
+		metalness4: 1,
+
+		translY: 0.32,
+		translZ: 1.91,
+		translX: 0.34
 	};
 
 	// variaveis camera
@@ -258,6 +264,23 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 				instancia.funcaoSpeed(speed);
 			}
 
+			var vento = (speed * 80 / 2) + ((speed > 0) ? 40 : -40);
+
+			if (vento > 1640) {
+				vento = 1640;
+			} else if (vento < -1640) {
+				vento = -1640;
+			}
+			bandeira.setWindStrength( vento );
+			var drag = speedAbs * 0.8 / 20;
+			if (drag < 0.03) {
+				drag = 0.03;
+			} else if (drag > 0.8) {
+				drag = 0.8;
+			}
+			drag = 1 - drag;
+			bandeira.setDRAG( drag );
+
 			breakingForce = 0;
 			engineForce = 0;
 
@@ -324,9 +347,27 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	};
 
 	createVehicle(new THREE.Vector3(0, 4, -20), ZERO_QUATERNION);
+	bandeira = new Bandeira( new THREE.Object3D() );
+	bandeira.getScene().scale.set( .0024, .0024, .0024 );
+	scene.add( bandeira.getScene() );
+	bandeira.getScene().visible = false;
+
+	/*
+	meuGui.add(controller, 'translY', function (value) {
+		controller.translY = value;
+	}, 0.0, 2.0, 0.01);
+	meuGui.add(controller, 'translZ', function (value) {
+		controller.translZ = value;
+	}, 1.6, 2.2, 0.01);
+	meuGui.add(controller, 'translX', function (value) {
+		controller.translX = value;
+	}, 0.0, 2.0, 0.01);
+	*/
+	
+
 
 	var loader = new FBXLoader();
-		 loader.load('bugatti2.fbx', function ( object ) {
+		 loader.load('bugatti3.fbx', function ( object ) {
 		 	console.log( object );
 		 	
 		 	corpo = object.getObjectByName('corpo');
@@ -473,6 +514,7 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 		 	object3DTrasDir = new THREE.Object3D();
 
 		 	carregouModelo = true;
+		 	bandeira.getScene().visible = true;
 	 }, function(xhr) {
 	 	if (instancia.funcaoLoading != undefined) {
 	 		instancia.funcaoLoading(xhr);
@@ -484,6 +526,8 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 	 	if (renderCarro) {
 	 		renderCarro(dt);
 	 	}
+
+	 	bandeira.animate();
 
 		chassisMesh.visible = false;
 		wheelMeshes[FRONT_LEFT].visible = false;
@@ -505,6 +549,7 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 			 	trasdir.visible = false;
 			 	frenteesq.visible = false;
 			 	frentedir.visible = false;
+			 	bandeira.getScene().visible = false;
 			}
 		} else {
 			if (camera) {
@@ -531,6 +576,14 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 				//camera.position.x += 5;
 				//camera.lookAt(chassisMesh.position);
 			}
+			// Bandeira
+			bandeira.getScene().position.copy( chassisMesh.position );
+			bandeira.getScene().quaternion.copy( chassisMesh.quaternion );
+			bandeira.getScene().translateZ( -1 * controller.translZ );
+			bandeira.getScene().translateX( -1 * controller.translX );
+			bandeira.getScene().translateY( controller.translY );
+			
+			// Fim Bandeira
 
 			/*********/
 			// FBX OBJ
@@ -599,6 +652,7 @@ function Carro(fisica, sceneP, cameraP, nomeP, funcaoSpeed, funcaoLoading) {
 			 	trasdir.visible = true;
 			 	frenteesq.visible = true;
 			 	frentedir.visible = true;
+			 	bandeira.getScene().visible = true;
 			}
 		}
 		/**************/
